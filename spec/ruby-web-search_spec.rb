@@ -1,5 +1,5 @@
 require File.dirname(__FILE__) + '/spec_helper'
-#$RUBY_WEB_SEARCH_DEBUG = true
+$RUBY_WEB_SEARCH_DEBUG = true
 
 describe "ruby-web-search" do
   
@@ -25,33 +25,33 @@ describe "ruby-web-search" do
     
       describe "results" do
         before(:all) do
-          @results = @response
+          @response = @response
         end
       
         it "should have a title" do
-          @results.first[:title].should be_an_instance_of(String)
-          @results.first[:title].size.should > 3
+          @response.first[:title].should be_an_instance_of(String)
+          @response.first[:title].size.should > 3
         end
       
         it "should have an url" do
-          @results.first[:url].should be_an_instance_of(String)
-          @results.first[:url].size.should > 3
+          @response.first[:url].should be_an_instance_of(String)
+          @response.first[:url].size.should > 3
         end
       
         it "should have a cache url" do
-          @results.first[:cache_url].should be_an_instance_of(String)
-          @results.first[:cache_url].size.should > 3
+          @response.first[:cache_url].should be_an_instance_of(String)
+          @response.first[:cache_url].size.should > 3
         end
       
         it "should have content" do
-          @results.first[:content].should be_an_instance_of(String)
-          @results.first[:content].size.should > 15
+          @response.first[:content].should be_an_instance_of(String)
+          @response.first[:content].size.should > 15
         end
       
         it "should have a domain" do
-          @results.first[:domain].should be_an_instance_of(String)
-          @results.first[:domain].size.should > 7
-          @results.first[:url].should include(@results.first[:domain])
+          @response.first[:domain].should be_an_instance_of(String)
+          @response.first[:domain].size.should > 7
+          @response.first[:url].should include(@response.first[:domain])
         end
       end
     end
@@ -73,6 +73,13 @@ describe "ruby-web-search" do
       
       it "should have exactly 24 results" do
         @response.size.should == 24
+      end
+      
+      it "should have 24 unique results" do
+        first = @response.shift
+        @response.each do |response|
+          first[:url].should_not == response[:url]
+        end
       end
     end
     

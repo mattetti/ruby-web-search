@@ -65,7 +65,7 @@ class RubyWebSearch
           @referer                  = options[:referer] ||  "http://github.com/mattetti/"
           @size                     = options[:size] || 4
           @result_size              = "large" if size > 8  # increase the result set size to avoid making to many requests
-          @size                     = 8 if @result_size == "large"
+          @size                     = 8 if (@result_size == "large" && size < 8)
           @cursor                   = 0
         end
       end
@@ -78,9 +78,9 @@ class RubyWebSearch
         else
           @request_url = "#{SEARCH_BASE_URLS[type]}?v=#{version}&q=#{CGI.escape(query)}"
           @request_url << "&rsz=#{result_size}" if result_size
+          @request_url << "&start=#{cursor}" if cursor > 0
           
           puts request_url if $RUBY_WEB_SEARCH_DEBUG
-          
           request_url
         end
       end
@@ -93,44 +93,27 @@ class RubyWebSearch
         curl_request = ::Curl::Easy.new(build_request){ |curl| curl.headers["Referer"] = referer }
         curl_request.perform
         results = JSON.load(curl_request.body_str) 
-        raw_response = Result.new(results)
+        raw_response = Response.new(results)
         response << raw_response.results
+        response = response.flatten
         @cursor = response.size - 1
-        if (cursor < size && custom_request_url.nil?)
-          execute(response.flatten)
+        if ((cursor + 1) < size && custom_request_url.nil?)
+          puts "cursor: #{cursor} requested results size: #{size}" if $RUBY_WEB_SEARCH_DEBUG
+          execute(response)
         else
-          response.flatten[0...size]
-        end
-      end
-      
-      def execute2(previous_responses=[])
-        response = previous_responses
-        curl_request = ::Curl::Easy.new(build_request){ |curl| curl.headers["Referer"] = referer }
-        curl_request.perform
-        results = JSON.load(curl_request.body_str) 
-        raw_response = Result.new(results)
-        response << raw_response.results
-        @cursor = response.size
-        puts "cursor: #{cursor} : size #{size}"
-        if (cursor < size && custom_request_url.nil?)
-          puts "looping cursor: #{cursor} : #{size}"
-          response.flatten
-        else
-          response.flatten
+          response[0...size]
         end
       end
       
     end #of Query
     
     
-    class Result
+    class Response
 
-      attr_reader :urls, :results, :status, :raw
-      def initialize(google_query_results={})
-        @raw        = google_query_results
-        raw_results = raw["responseData"]["results"]
-        @status     = raw["responseStatus"]
-        @urls       = raw_results.map{|r| r["unescapedUrl"]}
+      attr_reader :results, :status
+      def initialize(google_raw_response={})
+        raw_results = google_raw_response["responseData"]["results"]
+        @status     = google_raw_response["responseStatus"]
         @results    =  raw_results.map do |r| 
                       { 
                         :title      => r["titleNoFormatting"], 

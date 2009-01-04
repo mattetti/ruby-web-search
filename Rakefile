@@ -25,7 +25,7 @@ spec = Gem::Specification.new do |s|
   
   # Uncomment this to add a dependency
   s.add_dependency "curb"
-  s.add_dependency "JSON"
+  s.add_dependency "json"
   
   s.require_path = 'lib'
   s.autorequire = GEM
