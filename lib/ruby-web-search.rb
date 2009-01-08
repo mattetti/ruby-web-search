@@ -48,7 +48,6 @@ class RubyWebSearch
       #         (web only)
       #
       def initialize(options={})
-        @response = Response.new
         if options[:custom_request_url]
           @custom_request_url = options[:request_url]
         else
@@ -69,6 +68,7 @@ class RubyWebSearch
           @size                     = 8 if (@result_size == "large" && size < 8)
           @cursor                   = 0
         end
+        @response ||= Response.new(:query => (query || custom_request_url), :size => size)
       end
       
       
@@ -108,12 +108,14 @@ class RubyWebSearch
     
     
     class Response
-      attr_reader :results, :status
+      attr_reader :results, :status, :query, :size
       def initialize(google_raw_response={})
         process(google_raw_response) unless google_raw_response.empty?
       end
         
       def process(google_raw_response={})
+        @query   ||= google_raw_response[:query]
+        @size    ||= google_raw_response[:size]
         @results ||= []
         @status   ||= google_raw_response["responseStatus"]
         if status && status == 200
