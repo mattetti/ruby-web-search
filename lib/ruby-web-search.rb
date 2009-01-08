@@ -17,7 +17,7 @@ class RubyWebSearch
     class Query
       attr_accessor :query, :start_index, :result_size, :filter, :country_code, :language_code
       attr_accessor :safe_search, :type, :custom_search_engine_id, :version, :referer, :request_url
-      attr_accessor :size, :cursor, :custom_request_url
+      attr_accessor :size, :cursor, :custom_request_url, :response
       
       class Error < StandardError;  end
       
@@ -48,6 +48,7 @@ class RubyWebSearch
       #         (web only)
       #
       def initialize(options={})
+        @response = Response.new
         if options[:custom_request_url]
           @custom_request_url = options[:request_url]
         else
@@ -88,20 +89,18 @@ class RubyWebSearch
       # Makes the request to Google
       # if a larger set was requested than what is returned,
       # more requests are made until the correct amount is available
-      def execute(previous_responses=[])
-        response = previous_responses
+      def execute
         curl_request = ::Curl::Easy.new(build_request){ |curl| curl.headers["Referer"] = referer }
         curl_request.perform
         results = JSON.load(curl_request.body_str) 
-        raw_response = Response.new(results)
-        response << raw_response.results
-        response = response.flatten
-        @cursor = response.size - 1
+        
+        response.process(results)
+        @cursor = response.results.size - 1
         if ((cursor + 1) < size && custom_request_url.nil?)
           puts "cursor: #{cursor} requested results size: #{size}" if $RUBY_WEB_SEARCH_DEBUG
-          execute(response)
+          execute
         else
-          response[0...size]
+          response.limit(size)
         end
       end
       
@@ -109,23 +108,34 @@ class RubyWebSearch
     
     
     class Response
-
       attr_reader :results, :status
       def initialize(google_raw_response={})
-        raw_results = google_raw_response["responseData"]["results"]
-        @status     = google_raw_response["responseStatus"]
-        @results    =  raw_results.map do |r| 
-                      { 
-                        :title      => r["titleNoFormatting"], 
-                        :url        => r["unescapedUrl"],
-                        :cache_url  => r["cacheUrl"],
-                        :content    => r["content"],
-                        :domain     => r["visibleUrl"]
-                      }
-                    end
+        process(google_raw_response) unless google_raw_response.empty?
       end
-
-    end #of Results
+        
+      def process(google_raw_response={})
+        @results ||= []
+        @status   ||= google_raw_response["responseStatus"]
+        if status && status == 200
+          raw_results = google_raw_response["responseData"]["results"]
+          @results  +=  raw_results.map do |r| 
+                        { 
+                          :title      => r["titleNoFormatting"], 
+                          :url        => r["unescapedUrl"],
+                          :cache_url  => r["cacheUrl"],
+                          :content    => r["content"],
+                          :domain     => r["visibleUrl"]
+                        }
+                      end
+        end
+        
+        def limit(req_size)
+          @results = @results[0...req_size]
+          self
+        end
+        
+      end
+    end #of Response
     
   end #of Google
   
