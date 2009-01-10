@@ -28,5 +28,9 @@ By default, only the 4 top results get retrieved, you can specify the exact amou
 ## TODO
 
 * Full support of the google api
-* Start mulitple threads and join them to make large set queries more efficient
 * support more search engines (Yahoo, live etc...)
+
+## Experimentations
+
+Here are some benchmarks, it looks like running multiple concurrent threads is often not worth it
+http://gist.github.com/45350

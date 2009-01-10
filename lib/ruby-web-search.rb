@@ -1,7 +1,14 @@
 require 'rubygems'
 require 'CGI'
 require 'JSON'
-require 'curb'
+
+begin
+  gem 'curb'
+  require 'curb'
+rescue Gem::LoadError
+  require File.join(File.dirname(__FILE__), 'curbemu')
+end
+
 
 $RUBY_WEB_SEARCH_DEBUG = false
 
