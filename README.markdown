@@ -34,3 +34,4 @@ By default, only the 4 top results get retrieved, you can specify the exact amou
 
 Here are some benchmarks, it looks like running multiple concurrent threads is often not worth it
 http://gist.github.com/45350
+warmed up jruby benchmarks
