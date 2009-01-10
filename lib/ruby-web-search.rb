@@ -5,7 +5,7 @@ require 'JSON'
 begin
   gem 'curb'
   require 'curb'
-rescue Gem::LoadError
+rescue LoadError
   require File.join(File.dirname(__FILE__), 'curbemu')
 end
 

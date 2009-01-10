@@ -1,5 +1,4 @@
 # For better performance, you have to warm up JRuby
-
 require 'benchmark'
 require File.join(File.dirname(__FILE__), '..', 'lib', 'ruby-web-search')
 
