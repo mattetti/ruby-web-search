@@ -1,3 +1,4 @@
+require 'rubygems'
 require 'CGI'
 require 'JSON'
 require 'curb'
@@ -12,6 +13,11 @@ class RubyWebSearch
     def self.search(options={})
       query = ::RubyWebSearch::Google::Query.new(options)
       query.execute
+    end
+    
+    def self.unthreaded_search(options={})
+      query = ::RubyWebSearch::Google::Query.new(options)
+      query.execute_unthreaded
     end
     
     class Query
@@ -70,8 +76,6 @@ class RubyWebSearch
         @response ||= Response.new(:query => (query || custom_request_url), :size => size)
       end
       
-      
-      # Buils the request URL to be sent to Google
       def build_request
         if custom_request_url 
           custom_request_url
@@ -86,10 +90,31 @@ class RubyWebSearch
         end
       end
       
+      def build_requests
+        if custom_request_url 
+          requests = [custom_request_url]
+        else
+          requests = []
+          # create an array of requests based on the fact that google limits
+          # us to 8 responses per request but let us use a cursor
+          (size / 8.to_f).ceil.times do |n|
+            url = "#{SEARCH_BASE_URLS[type]}?v=#{version}&q=#{CGI.escape(query)}"
+            url << "&rsz=#{result_size}" if result_size
+            url << "&hl=#{language_code}" if language_code
+            url << "&start=#{cursor}"
+            @cursor += 8
+            requests << url
+          end
+          
+          puts requests.inspect if $RUBY_WEB_SEARCH_DEBUG
+          requests
+        end
+      end
+      
       # Makes the request to Google
       # if a larger set was requested than what is returned,
       # more requests are made until the correct amount is available
-      def execute
+      def execute_unthreaded
         curl_request = ::Curl::Easy.new(build_request){ |curl| curl.headers["Referer"] = referer }
         curl_request.perform
         results = JSON.load(curl_request.body_str) 
@@ -102,6 +127,23 @@ class RubyWebSearch
         else
           response.limit(size)
         end
+      end
+      
+      # Makes the request to Google
+      # if a larger set was requested than what is returned,
+      # more requests are made until the correct amount is available
+      def execute
+        build_requests.each_with_index do |req, index|
+          tr = "req_#{index}"
+          tr = Thread.new do
+             curl_request = ::Curl::Easy.new(req){ |curl| curl.headers["Referer"] = referer }
+             curl_request.perform
+             results = JSON.load(curl_request.body_str)
+             response.process(results)
+           end
+          tr.join
+        end
+        response.limit(size)
       end
       
     end #of Query
@@ -118,8 +160,8 @@ class RubyWebSearch
         @size     ||= google_raw_response[:size]
         @results  ||= []
         @status   ||= google_raw_response["responseStatus"]
-        if status && status == 200
-          estimated_result_count ||= google_raw_response["cursor"]["estimatedResultCount"]
+        if google_raw_response["responseData"] && status && status == 200
+          estimated_result_count ||= google_raw_response["cursor"]["estimatedResultCount"] if google_raw_response["cursor"]
           @results  +=  google_raw_response["responseData"]["results"].map do |r| 
                         { 
                           :title      => r["titleNoFormatting"], 
