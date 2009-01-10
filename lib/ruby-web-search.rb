@@ -130,7 +130,7 @@ class RubyWebSearch
         @cursor = response.results.size - 1
         if ((cursor + 1) < size && custom_request_url.nil?)
           puts "cursor: #{cursor} requested results size: #{size}" if $RUBY_WEB_SEARCH_DEBUG
-          execute
+          execute_unthreaded
         else
           response.limit(size)
         end
