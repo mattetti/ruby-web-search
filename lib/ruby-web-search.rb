@@ -53,7 +53,7 @@ class RubyWebSearch
         else
           @query = options[:query]
           raise Google::Query::Error, "You need to pass a query" unless @query
-          @start_index              = options[:start_index] || 0
+          @cursor                   = options[:start_index] || 0
           @result_size              = options[:result_size]
           @filter                   = options[:filter]
           @type                     = options[:type]        || :web
@@ -66,7 +66,6 @@ class RubyWebSearch
           @size                     = options[:size] || 4
           @result_size              = "large" if size > 8  # increase the result set size to avoid making to many requests
           @size                     = 8 if (@result_size == "large" && size < 8)
-          @cursor                   = 0
         end
         @response ||= Response.new(:query => (query || custom_request_url), :size => size)
       end
@@ -80,6 +79,7 @@ class RubyWebSearch
           @request_url = "#{SEARCH_BASE_URLS[type]}?v=#{version}&q=#{CGI.escape(query)}"
           @request_url << "&rsz=#{result_size}" if result_size
           @request_url << "&start=#{cursor}" if cursor > 0
+          @request_url << "&hl=#{language_code}" if language_code
           
           puts request_url if $RUBY_WEB_SEARCH_DEBUG
           request_url
@@ -108,19 +108,19 @@ class RubyWebSearch
     
     
     class Response
-      attr_reader :results, :status, :query, :size
+      attr_reader :results, :status, :query, :size, :estimated_result_count
       def initialize(google_raw_response={})
         process(google_raw_response) unless google_raw_response.empty?
       end
         
       def process(google_raw_response={})
-        @query   ||= google_raw_response[:query]
-        @size    ||= google_raw_response[:size]
-        @results ||= []
+        @query    ||= google_raw_response[:query]
+        @size     ||= google_raw_response[:size]
+        @results  ||= []
         @status   ||= google_raw_response["responseStatus"]
         if status && status == 200
-          raw_results = google_raw_response["responseData"]["results"]
-          @results  +=  raw_results.map do |r| 
+          estimated_result_count ||= google_raw_response["cursor"]["estimatedResultCount"]
+          @results  +=  google_raw_response["responseData"]["results"].map do |r| 
                         { 
                           :title      => r["titleNoFormatting"], 
                           :url        => r["unescapedUrl"],
