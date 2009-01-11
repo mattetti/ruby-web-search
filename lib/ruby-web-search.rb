@@ -122,9 +122,10 @@ class RubyWebSearch
       # if a larger set was requested than what is returned,
       # more requests are made until the correct amount is available
       def execute_unthreaded
-        curl_request = ::Curl::Easy.new(build_request){ |curl| curl.headers["Referer"] = referer }
-        curl_request.perform
-        results = JSON.load(curl_request.body_str) 
+        @curl_request ||= ::Curl::Easy.new(){ |curl| curl.headers["Referer"] = referer }
+        @curl_request.url = build_request
+        @curl_request.perform
+        results = JSON.load(@curl_request.body_str) 
         
         response.process(results)
         @cursor = response.results.size - 1
