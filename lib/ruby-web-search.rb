@@ -140,15 +140,15 @@ class RubyWebSearch
       # if a larger set was requested than what is returned,
       # more requests are made until the correct amount is available
       def execute
-        build_requests.each_with_index do |req, index|
-          tr = "req_#{index}"
-          tr = Thread.new do
+        threads = build_requests.map do |req|
+          Thread.new do
              curl_request = ::Curl::Easy.new(req){ |curl| curl.headers["Referer"] = referer }
              curl_request.perform
-             results = JSON.load(curl_request.body_str)
-             response.process(results)
-           end
-          tr.join
+             JSON.load(curl_request.body_str)
+          end
+        end
+        threads.each do |t|
+          response.process(t.value)
         end
         response.limit(size)
       end
