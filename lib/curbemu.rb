@@ -11,7 +11,7 @@ module Curl
   class Easy
     attr_accessor :timeout, :url, :body_str, :headers, :conn
  
-    def initialize(url)
+    def initialize(url = nil)
       @url = url
       @headers = {}
       @body_str = nil
