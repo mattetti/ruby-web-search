@@ -166,7 +166,7 @@ class RubyWebSearch
         @query    ||= google_raw_response[:query]
         @size     ||= google_raw_response[:size]
         @results  ||= []
-        @status   ||= google_raw_response["responseStatus"]
+        @status     = google_raw_response["responseStatus"]
         if google_raw_response["responseData"] && status && status == 200
           estimated_result_count ||= google_raw_response["cursor"]["estimatedResultCount"] if google_raw_response["cursor"]
           @results  +=  google_raw_response["responseData"]["results"].map do |r| 
