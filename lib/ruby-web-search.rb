@@ -77,7 +77,7 @@ class RubyWebSearch
           @version                  = options[:version] || "1.0"
           @referer                  = options[:referer] ||  "http://github.com/mattetti/"
           @size                     = options[:size] || 4
-          @result_size              = "large" if size > 8  # increase the result set size to avoid making to many requests
+          @result_size              = "large" if size > 4  # increase the result set size to avoid making too many requests
           @size                     = 8 if (@result_size == "large" && size < 8)
         end
         @response ||= Response.new(:query => (query || custom_request_url), :size => size)
