@@ -2,12 +2,12 @@ require 'rubygems'
 require 'CGI'
 require 'JSON'
 
-begin
-  gem 'curb'
-  require 'curb'
-rescue LoadError
+# begin
+#   gem 'curb'
+#   require 'curb'
+# rescue LoadError
   require File.join(File.dirname(__FILE__), 'curbemu')
-end
+# end
 
 
 $RUBY_WEB_SEARCH_DEBUG = false
