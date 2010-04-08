@@ -212,8 +212,6 @@ class RubyWebSearch
       class Error < StandardError;  end
 
       SEARCH_BASE_URLS = {  :web    => "http://boss.yahooapis.com/ysearch/web",
-                            :news   => "http://boss.yahooapis.com/ysearch/news",
-                            :image  => "http://boss.yahooapis.com/ysearch/images",
                           }
 
       #
@@ -385,8 +383,6 @@ class RubyWebSearch
       class Error < StandardError;  end
 
       SEARCH_BASE_URLS = {  :web    => "http://api.search.live.net/json.aspx?sources=web",
-                            :news   => "http://api.search.live.net/json.aspx?sources=news",
-                            :image  => "http://api.search.live.net/json.aspx?sources=image",
                           }
 
       #
