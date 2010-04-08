@@ -70,8 +70,8 @@ class RubyWebSearch
           @result_size              = options[:result_size]
           @filter                   = options[:filter]
           @type                     = options[:type]        || :web
-          @country_code             = options[:country_code] ? "country#{options[:country_code].upcase}" : nil
-          @language_code            = options[:language_code] ? "lang_#{options[:language_code].upcase}" : nil
+          @country_code             = options[:country_code]
+          @language_code            = options[:language_code] ? "lang_#{options[:language_code]}" : nil
           @safe_search              = options[:safe_search]
           @custom_search_engine_id  = options[:custom_search_engine_id]
           @version                  = options[:version] || "1.0"
@@ -90,8 +90,9 @@ class RubyWebSearch
           @request_url = "#{SEARCH_BASE_URLS[type]}?v=#{version}&q=#{CGI.escape(query)}"
           @request_url << "&rsz=#{result_size}" if result_size
           @request_url << "&start=#{cursor}" if cursor > 0
-          @request_url << "&hl=#{language_code}" if language_code
-          
+          @request_url << "&lr=#{language_code}" if language_code
+          @request_url << "&hl=#{country_code}" if country_code
+
           puts request_url if $RUBY_WEB_SEARCH_DEBUG
           request_url
         end
@@ -107,7 +108,8 @@ class RubyWebSearch
           (size / 8.to_f).ceil.times do |n|
             url = "#{SEARCH_BASE_URLS[type]}?v=#{version}&q=#{CGI.escape(query)}"
             url << "&rsz=#{result_size}" if result_size
-            url << "&hl=#{language_code}" if language_code
+            url << "&lr=#{language_code}" if language_code
+            url << "&hl=#{country_code}" if country_code
             url << "&start=#{cursor}"
             @cursor += 8
             requests << url
