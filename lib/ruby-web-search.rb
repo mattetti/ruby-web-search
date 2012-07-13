@@ -28,7 +28,7 @@ class RubyWebSearch
     end
     
     class Query
-      attr_accessor :query, :start_index, :result_size, :filter, :country_code, :language_code
+      attr_accessor :query, :start_index, :result_size, :filter, :country_code, :language_code, :global
       attr_accessor :safe_search, :type, :custom_search_engine_id, :version, :referer, :request_url
       attr_accessor :size, :cursor, :custom_request_url, :response
       
@@ -77,6 +77,7 @@ class RubyWebSearch
           @version                  = options[:version] || "1.0"
           @referer                  = options[:referer] ||  "http://github.com/mattetti/"
           @size                     = options[:size] || 4
+          @global                   = options[:global]
           @result_size              = "large" if size > 4  # increase the result set size to avoid making too many requests
           @size                     = 8 if (@result_size == "large" && size < 8)
         end
@@ -92,6 +93,7 @@ class RubyWebSearch
           @request_url << "&start=#{cursor}" if cursor > 0
           @request_url << "&lr=#{language_code}" if language_code
           @request_url << "&hl=#{country_code}" if country_code
+          @request_url << "&gl=#{global}" if global
 
           puts request_url if $RUBY_WEB_SEARCH_DEBUG
           request_url
@@ -110,6 +112,7 @@ class RubyWebSearch
             url << "&rsz=#{result_size}" if result_size
             url << "&lr=#{language_code}" if language_code
             url << "&hl=#{country_code}" if country_code
+            url << "&gl=#{global}" if global
             url << "&start=#{cursor}"
             @cursor += 8
             requests << url
