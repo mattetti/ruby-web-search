@@ -23,6 +23,10 @@ describe "ruby-web-search" do
         @response.results.size.should == 4
       end
     
+      it "should have a non nil estimated_result_count" do
+        @response.estimated_result_count.should_not == nil
+      end
+
       describe "results" do
         before(:all) do
           @results = @response.results
